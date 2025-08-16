@@ -134,7 +134,7 @@ function Login( { setMail } ) {
   return (
     <div className="relative bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md mx-auto transform transition-transform duration-300 border border-gray-700">
       <h2 className="text-3xl font-extrabold text-center text-white mb-6">
-        Welcome to BudgetWiz 💰
+        Welcome to BudgetWig 💰
       </h2>
       <p className="text-center text-gray-400 mb-8">
         Your personal budget planner. Please log in with OTP to continue.
