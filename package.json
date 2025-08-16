@@ -1,5 +1,5 @@
 {
-  "name": "portfolio-website",
+  "name": "BudgetWiz",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -28,6 +28,7 @@
     "firebase": "^11.1.0",
     "framer-motion": "^11.15.0",
     "html2canvas": "^1.4.1",
+    "js-cookie": "^3.0.5",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "local-storage": "^2.0.0",
