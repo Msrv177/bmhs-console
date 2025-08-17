@@ -1,23 +1,18 @@
+const webAppUrl = "https://script.google.com/macros/s/AKfycbzwQflZ4WGdsmcUcL7Eyb3vPYdUjKNcAwAYCe6eL5zJZZ7zSG9Pvmj72nL1kBNk_Utbyw/exec"; // Replace with your Apps Script Web App URL
 
-async function sendOtp(email) {
+async function sendEmail(email, subject, body) {
+  const url = `${webAppUrl}?email=${encodeURIComponent(email)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
   try {
-    const url = `https://script.google.com/macros/s/AKfycbzFxptwCpZreyB6msSiRopRi8FrXOrsAbkGYdqxbGcJVR-YekxpKPgzqC_exKN8EnyAoQ/exec?email=${encodeURIComponent(email)}`;
-
     const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.success) {
-      console.log("OTP sent successfully:", data.otp); 
-      alert("OTP sent to your email!");
-    } else {
-      console.error("Error:", data.message);
-      alert("Failed to send OTP: " + data.message);
-    }
-  } catch (error) {
-    console.error("Request failed:", error);
-    alert("Something went wrong. Please try again.");
+    const result = await response.json();
+    console.log(result); // { success: true/false, message: "..." }
+    return result;
+  } catch (err) {
+    console.error("Error:", err.message);
+    return { success: false, message: err.message };
   }
 }
 
-
-sendOtp("msrv.live@gmail.com")
+// Example usage:
+sendEmail("msrv.live@gmail.com", "Hello", "This is a test message");

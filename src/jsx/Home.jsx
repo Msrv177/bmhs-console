@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItem, ListItemText, Box, Container, Paper, Grid, Button, Dialog, DialogTitle, DialogContent, TextField, MenuItem, Select, InputLabel, FormControl, Divider, Chip, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, DialogActions } from '@mui/material';
+import { Avatar, AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItem, ListItemText, Box, Container, Paper, Grid, Button, Dialog, DialogTitle, DialogContent, TextField, MenuItem, Select, InputLabel, FormControl, Divider, Chip, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, DialogActions } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -22,6 +22,7 @@ import AddEntryModal from './AddEntryModal';
 import SettingsModal from './SettingsModal';
 import ConfirmModals from './ConfirmModals';
 import MonthWise from './MonthWise';
+import ProfileModal from './ProfileModal';
 
 // Define the dark theme for Material UI
 const darkTheme = createTheme({
@@ -105,6 +106,7 @@ function Home( { mail } ) {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openEntryModal, setOpenEntryModal] = useState(false);
   const [openSettingsModal, setOpenSettingsModal] = useState(false);
+  const [openProfileModal, setOpenProfileModal] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [entryType, setEntryType] = useState('Expense');
   const [amount, setAmount] = useState('');
@@ -112,7 +114,7 @@ function Home( { mail } ) {
   const [remarks, setRemarks] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); 
   const [entries, setEntries] = useState([]);
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(mail);
   const navigate = useNavigate();  
 
   const [incomeCategories, setIncomeCategories] = useState([]);
@@ -123,6 +125,7 @@ function Home( { mail } ) {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [openEntryConfirmModal, setOpenEntryConfirmModal] = useState(false);
   const [entryIdToDelete, setEntryIdToDelete] = useState(null);
+  const [Personal_Data,  setPersonal_Data] = useState(null);
 
   const defaultIncomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Bonus', 'Other Income'];
   const defaultExpenseCategories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Education', 'Health', 'Rent', 'Other Expense'];
@@ -132,7 +135,7 @@ function Home( { mail } ) {
       navigate("/Login");
       return;
     }
-
+    setUserId(mail);
     const auth = getAuth();
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -141,6 +144,27 @@ function Home( { mail } ) {
         setUserId(null);
       }
     });
+
+    // Function to fetch the user's personal data from Firestore
+    const fetchPersonalData = async () => {
+      if (mail) {
+        try {
+          const personalDataRef = doc(db, mail, 'Personal_Data');
+          const docSnap = await getDoc(personalDataRef);
+          if (docSnap.exists()) {
+            setPersonal_Data(docSnap.data());
+          } else {
+            // If the document doesn't exist, set the state to an empty object
+            // This is useful for initial state handling in ProfileModal
+            setPersonal_Data({});
+          }
+        } catch (error) {
+          console.error("Error fetching personal data:", error);
+        }
+      }
+    };
+
+    fetchPersonalData();
 
     const categoriesDocRef = doc(db, mail, 'IncomCategoryList');
     const unsubscribeIncomeCats = onSnapshot(categoriesDocRef, async (docSnap) => {
@@ -168,7 +192,7 @@ function Home( { mail } ) {
     const entriesQuery = query(userCollectionRef, orderBy("date", "asc"));
     const unsubscribeEntries = onSnapshot(entriesQuery, (snapshot) => {
       const fetchedEntries = snapshot.docs
-        .filter((doc) => !["IncomCategoryList", "ExpenseCategoryList"].includes(doc.id))
+        .filter((doc) => !["IncomCategoryList", "ExpenseCategoryList","Personal_Data"].includes(doc.id))
         .map((doc) => ({ id: doc.id, ...doc.data() }));
       setEntries(fetchedEntries);
     });
@@ -301,9 +325,18 @@ function Home( { mail } ) {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-              <span className="font-bold text-blue-300">FinTrack</span> {activeTab === 'dashboard' ? 'Dashboard' : (activeTab === 'reports' ? 'Reports' : (activeTab === 'monthwise' ? 'Monthly Analysis' : 'Settings'))}
+              <span className="font-bold text-blue-300">BudgetWing</span> {activeTab === 'dashboard' ? 'Dashboard' : (activeTab === 'reports' ? 'Reports' : (activeTab === 'monthwise' ? 'Monthly Analysis' : 'Settings'))}
             </Typography>
-            {userId && <Typography variant="body2" sx={{ mr: 2 }}>User ID: {userId}</Typography>}
+            {mail && (
+              <IconButton
+                onClick={() => setOpenProfileModal(true)}
+                sx={{ ml: 1 }}
+              >
+                <Avatar sx={{ bgcolor: "primary.main", width: 32, height: 32, fontSize: 16 }} src={Personal_Data?.profilePhoto}>
+                  {!Personal_Data?.profilePhoto && mail.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+            )}
           </Toolbar>
         </AppBar>
 
@@ -451,6 +484,16 @@ function Home( { mail } ) {
           openEntryConfirmModal={openEntryConfirmModal}
           setOpenEntryConfirmModal={setOpenEntryConfirmModal}
           handleConfirmDeleteEntry={handleConfirmDeleteEntry}
+        />
+
+        <ProfileModal
+          open={openProfileModal}
+          setOpen={setOpenProfileModal}
+          userEmail={mail}
+          darkTheme={darkTheme}
+          db={db}
+          collectionName={mail}
+          Personal_Data={Personal_Data}
         />
 
       </Box>
